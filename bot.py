@@ -23,8 +23,8 @@ class Bot(object):
   def scrapeStockTwits(self):
     URL = "https://stocktwits.com/symbol/BTC.X"
     self.driver.get(URL)
-    time.sleep(1)
-    self.driver.find_element_by_xpath("/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[1]/div[2]")\
+    time.sleep(2)
+    self.driver.find_element_by_xpath("/html/body/div[2]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[1]/div[2]")\
       .click()
 
     sentimentContainer = self.driver.find_element_by_class_name("infinite-scroll-component")
@@ -35,19 +35,32 @@ class Bot(object):
       
       if len(sentimentContainer.find_elements_by_xpath("./div")) > sentimentCount:
         for i in range(len(sentimentContainer.find_elements_by_xpath("./div")) - sentimentCount):
+          author = sentiments[i].find_element_by_xpath(f"/html/body/div[2]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[1]/span[1]/span/a/span").text
+          content = sentiments[i].find_element_by_xpath(f"/html/body/div[2]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[2]/div/div/div").text
+
           try:
-            movement = sentiments[i].find_element_by_xpath(f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[1]/span[1]/span/a").text
+            movement = sentiments[i].find_element_by_xpath(f"/html/body/div[2]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[1]/span[1]/span/a").text
+            movementValue = 0
+
+            if movement == "Bullish":
+              movementValue = 1
+            if movement == "Bearish":
+              movementValue = -1
+
+            r = requests.post(API_URL, data = {
+              "content": content,
+              "author": author,
+              "source": URL,
+              "sentiment": movementValue
+            })
+
           except NoSuchElementException:
-            pass
+            r = requests.post(API_URL, data = {
+              "content": content,
+              "author": author,
+              "source": URL
+            })
 
-          author = sentiments[i].find_element_by_xpath(f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[1]/span[1]/span/a/span").text
-          content = sentiments[i].find_element_by_xpath(f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[2]/div/div/div").text
-
-          r = requests.post(API_URL, data = {
-            "content": content,
-            "author": author,
-            "source": URL
-          })
           if r.status_code != 201:
             print("Sentiment POST failed.")
           else:

@@ -2,6 +2,7 @@ import requests
 
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 
@@ -12,7 +13,7 @@ API_URL = "http://localhost:5000/api/v1/sentiments"
 class Bot(object):
   def __init__(self):
     self.caps = DesiredCapabilities().FIREFOX
-    self.caps["pageLoadStrategy"] = "eager"
+    # self.caps["pageLoadStrategy"] = "eager"
     self.driver = webdriver.Firefox(desired_capabilities=self.caps)
 
     self.running = True
@@ -24,22 +25,23 @@ class Bot(object):
     URL = "https://stocktwits.com/symbol/BTC.X"
     self.driver.get(URL)
     time.sleep(1)
-    self.driver.find_element_by_xpath("/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[1]/div[2]")\
+    self.driver.find_element(By.XPATH, "/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[1]/div[2]")\
       .click()
+    print("Real time mode initiated.")
 
     sentimentContainer = self.driver.find_element_by_class_name("infinite-scroll-component")
-    sentimentCount = len(sentimentContainer.find_elements_by_xpath("./div"))
+    sentimentCount = len(sentimentContainer.find_elements(By.XPATH, "./div"))
 
     while self.running:
-      sentiments = sentimentContainer.find_elements_by_xpath("./div")
+      sentiments = sentimentContainer.find_elements(By.XPATH, "./div")
       
-      if len(sentimentContainer.find_elements_by_xpath("./div")) > sentimentCount:
-        for i in range(len(sentimentContainer.find_elements_by_xpath("./div")) - sentimentCount):
-          author = sentiments[i].find_element_by_xpath(f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[1]/span[1]/span/a/span").text
-          content = sentiments[i].find_element_by_xpath(f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[2]/div/div/div").text
+      if len(sentimentContainer.find_elements(By.XPATH, "./div")) > sentimentCount:
+        for i in range(len(sentimentContainer.find_elements(By.XPATH, "./div")) - sentimentCount):
+          author = sentiments[i].find_element(By.XPATH, f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[1]/span[1]/span/a/span").text
+          content = sentiments[i].find_element(By.XPATH, f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[2]/div/div/div").text
 
           try:
-            movement = sentiments[i].find_element_by_xpath(f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[1]/span[2]/span").text
+            movement = sentiments[i].find_element(By.XPATH, f"/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[2]/div[3]/div/div[{ i+1 }]/div/div/article/div/div[2]/div[1]/span[2]/span").text
 
             r = requests.post(API_URL, data = {
               "content": content,
@@ -60,6 +62,6 @@ class Bot(object):
           else:
             print("Successfully POSTED new sentiment.")
 
-      sentimentCount = len(sentimentContainer.find_elements_by_xpath("./div"))
+      sentimentCount = len(sentimentContainer.find_elements(By.XPATH, "./div"))
 
       time.sleep(5)

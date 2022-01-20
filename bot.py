@@ -12,9 +12,12 @@ API_URL = "http://localhost:5000/api/v1/sentiments"
 
 class Bot(object):
   def __init__(self):
-    self.caps = DesiredCapabilities().FIREFOX
-    # self.caps["pageLoadStrategy"] = "eager"
-    self.driver = webdriver.Firefox(desired_capabilities=self.caps)
+    self.caps = DesiredCapabilities().CHROME
+    self.caps["pageLoadStrategy"] = "eager"
+    self.options = webdriver.ChromeOptions()
+    self.options.add_argument("--window-size=960x1080")
+    # self.options.set_headless()
+    self.driver = webdriver.Chrome(desired_capabilities=self.caps, options=self.options)
 
     self.running = True
 
@@ -22,7 +25,7 @@ class Bot(object):
     pass
 
   def scrapeStockTwits(self):
-    URL = "https://stocktwits.com/symbol/BTC.X"
+    URL = "http://stocktwits.com/symbol/BTC.X"
     self.driver.get(URL)
     time.sleep(1)
     self.driver.find_element(By.XPATH, "/html/body/div[3]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div[1]/div[2]")\
